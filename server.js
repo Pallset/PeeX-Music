@@ -18,16 +18,17 @@ app.use('/api', downloadRoutes);
 
 app.get('/api/lyrics', async (req, res) => {
     const { song, band } = req.query;
-    let query;
 
-    if (band) {
-        query = `${song} ${band}`;
-    } else {
-        query = song;
+    if (!song) {
+        return res.status(400).json({ status: false, message: "Parameter 'song' wajib diisi!" });
     }
 
+    console.log("Mencari lirik untuk:");
+    console.log("Band:", band || "unknown");
+    console.log("Song:", song);
+
     try {
-        const lyrics = await lyricsScraper.searchLyrics(query);
+        const lyrics = await lyricsScraper.scrapeLyrics(band, song);
         res.json({ status: true, lyrics: lyrics });
     } catch (error) {
         console.error('Gagal mencari lirik:', error);
