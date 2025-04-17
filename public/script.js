@@ -25,8 +25,10 @@ function resetAnimasiTeks() {
     animasiTeksElement.textContent = '';
     animasiTeksElement.classList.remove('typing-effect');
     indexTeks = 0;
-    setTimeout(mulaiAnimasiTeks, 100);
-setTimeout(mulaiAnimasiTeks, 1000); 
+    setTimeout(mulaiAnimasiTeks, 1000);
+}
+
+setTimeout(mulaiAnimasiTeks, 1000);
 
 const dokumentasiSection = document.getElementById('dokumentasi');
 const tryNowSection = document.getElementById('try-now');
@@ -164,7 +166,7 @@ function playSong(title, artist, thumbnail, duration, url, trackInfo) {
     currentTrackUrl = url;
     audioPlayer.play();
     isPlaying = true;
-    playPauseButton.textContent = '▐▐';
+    playPauseButton.textContent = '[  ▶︎ ]';
     searchMusicSection.classList.add('hidden');
     musicPlayerSection.classList.remove('hidden');
 
@@ -221,36 +223,46 @@ lyricsButton.addEventListener('click', async () => {
     if (currentTrackInfo && currentTrackInfo.title && currentTrackInfo.artist) {
         const songTitle = currentTrackInfo.title;
         const artistName = currentTrackInfo.artist;
-        const lyricsUrl = `/api/lyrics?song=${encodeURIComponent(songTitle)}&band=${encodeURIComponent(artistName)}`;
-        console.log('URL permintaan lirik:', lyricsUrl);
+
+        const multyUrl = `/api/lyricsmulty?song=${encodeURIComponent(songTitle)}&band=${encodeURIComponent(artistName)}`;
+        const azUrl = `/api/lyrics?song=${encodeURIComponent(songTitle)}&band=${encodeURIComponent(artistName)}`;
+
+        let response, data;
 
         try {
-            const response = await fetch(lyricsUrl);
-            const data = await response.json();
-            console.log('Respons dari API lirik:', data);
+            response = await fetch(multyUrl);
+            data = await response.json();
 
-            if (data.status && data.lyrics) {
-                lyricsTitle.textContent = `${songTitle} - ${artistName}`;
-                lyricsContent.textContent = data.lyrics;
-                lyricsContainer.classList.remove('hidden');
-                lyricsContainer.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                lyricsTitle.textContent = 'Lirik Tidak Ditemukan';
-                lyricsContent.textContent = data.message || 'Maaf, lirik untuk lagu ini tidak ditemukan.';
-                lyricsContainer.classList.remove('hidden');
-                lyricsContainer.scrollIntoView({ behavior: 'smooth' });
+            if (!data.status || !data.lyrics) {
+                throw new Error('Gagal ambil lirik dari Multy, coba AZLyrics');
             }
-        } catch (error) {
-            console.error('Gagal mengambil lirik:', error);
-            lyricsTitle.textContent = 'Gagal Mengambil Lirik';
-            lyricsContent.textContent = 'Terjadi kesalahan saat mengambil lirik.';
+
+            console.log('Lirik berhasil dari Multy:', data);
+        } catch (err) {
+            console.warn('Error dari Multy:', err.message);
+            try {
+                response = await fetch(azUrl);
+                data = await response.json();
+                console.log('Lirik fallback dari AZLyrics:', data);
+            } catch (fallbackErr) {
+                console.error('Gagal ambil lirik dari kedua sumber:', fallbackErr);
+                alert('Lyrics Gagal Dimuat...😅🙏');
+                return;
+            }
+        }
+
+        if (data && data.lyrics) {
+            lyricsTitle.textContent = `${songTitle} - ${artistName}`;
+            lyricsContent.textContent = data.lyrics;
             lyricsContainer.classList.remove('hidden');
-            lyricsContainer.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert('Lirik tidak ditemukan.');
         }
     } else {
-        alert('Tidak ada lagu yang sedang diputar.');
+        alert('Informasi lagu tidak tersedia.');
     }
 });
+
 
 window.addEventListener('scroll', () => {
     const dokumentasiTop = dokumentasiSection.offsetTop;
