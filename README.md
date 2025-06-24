@@ -59,7 +59,7 @@
 
 ```bash
 # Clone project
-git clone https://github.com/namamu/peex-music.git
+git clone https://github.com/PallSet/peex-music.git
 cd peex-music
 
 # Install dependencies
